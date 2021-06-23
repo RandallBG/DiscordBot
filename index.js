@@ -36,9 +36,6 @@ client.on('message', async message =>{
             message.reply("You need to join a voice channel first!");
         }
     }
-    if(message.content.includes("!play")){
-        
-    }
 });
 
 client.login(process.env.TOKEN);
