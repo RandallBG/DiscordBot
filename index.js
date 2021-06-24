@@ -5,7 +5,6 @@ require("dotenv").config();
 const youtube = new Youtube(process.env.YOUTUBE_API);
 const fs = require("fs");
 const ytdl = require("ytdl-core");
-const { url } = require("inspector");
 
 //array used to store a list of songs to be played
 //every #play function will add a song to the end of the list
@@ -19,6 +18,7 @@ function PlaySong(connection, url){
     let stream = ytdl(url,{ filter: 'audioonly'});
     stream.on('error', () =>{
         console.log("error playing next song");
+        console.log(url);
     });
     let dispatcher = connection.play(stream);
 
@@ -27,6 +27,18 @@ function PlaySong(connection, url){
     dispatcher.on('finish', ()=>{
         PlayNextSong(connection);
     });
+}
+
+//search for song return its url if it is valid
+async function searchYoutube(searchParam){
+    if (ytdl.validateURL(searchParam)) {
+        return searchParam;
+    } else
+    {
+        let video = await youtube.searchVideos(searchParam);
+        console.log(video.url);
+        return video.url;
+    }
 }
 
 //Play the next song in the array if there is one
@@ -43,9 +55,8 @@ function PlayNextSong(connection){
 }
 
 //Add song to list and let the user know.
-function AddSong(message, url){
+function AddSong(url){
     playList.push(url);
-    message.reply(`Adding ${url} to the playlist`);
 }
 
 client.on("ready", () =>{
@@ -68,19 +79,18 @@ client.on('message', async message =>{
             //the url they wish to play or the text they wish 
             //to search for
             let songUrl = message.content.slice(6);
-
             //we only want to begin playing a song on the first song, subsequent
             //songs will then just be pushed to the playlist array and the current
             //song will continue playing.
             if(playList.length === 0){
-                AddSong(message, songUrl);
-                PlaySong(connection, playList[0]);
+                AddSong(await searchYoutube(songUrl));
+                PlaySong(connection, await searchYoutube(songUrl));
             }else
             {
                 //only add the song if there is currently a song playing.
                 //the playsong function will automatically begin the next song
                 //in the list if there is one
-                AddSong(message, songUrl);
+                AddSong(await searchYoutube(songUrl));
             }           
         } else{
             message.reply("You need to join a voice channel first!");
