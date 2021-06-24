@@ -6,9 +6,7 @@ const youtube = new Youtube(process.env.YOUTUBE_API);
 const fs = require("fs");
 const ytdl = require("ytdl-core");
 
-//array used to store a list of songs to be played
-//every #play function will add a song to the end of the list
-//when a song is finished we will move to the next in the list
+//array used to store songs
 let playList = [];
 
 //function to play a song. requires a connection to a voice channel and 
@@ -43,8 +41,7 @@ async function searchYoutube(searchParam){
 
 //Play the next song in the array if there is one
 function PlayNextSong(connection){
-    //shift the current song off the list and begin playing
-    //the next one if there is one
+    //remove last song
     playList.shift();
 
     if(playList.length === 0){
@@ -64,8 +61,7 @@ client.on("ready", () =>{
 });
 
 client.on('message', async message =>{
-    //voice only works in guilds, if the message 
-    //does not come from a guild then ignore it
+    //ignore message if doesn't come from guild
     if(!message.guild) return;
 
     if(message.content.includes("#play")){
@@ -75,21 +71,14 @@ client.on('message', async message =>{
             //join channel of message sender
             let connection = await message.member.voice.channel.join();
             
-            //slice off the command of !play to return a string of 
-            //the url they wish to play or the text they wish 
-            //to search for
+            //slice command off
             let songUrl = message.content.slice(6);
-            //we only want to begin playing a song on the first song, subsequent
-            //songs will then just be pushed to the playlist array and the current
-            //song will continue playing.
+            //if array is empty begin playing song otherwise add to queue
             if(playList.length === 0){
                 AddSong(await searchYoutube(songUrl));
                 PlaySong(connection, await searchYoutube(songUrl));
             }else
             {
-                //only add the song if there is currently a song playing.
-                //the playsong function will automatically begin the next song
-                //in the list if there is one
                 AddSong(await searchYoutube(songUrl));
             }           
         } else{
