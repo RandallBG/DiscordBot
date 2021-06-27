@@ -43,9 +43,8 @@ async function searchYoutube(searchParam){
 function PlayNextSong(connection){
     //remove last song
     playList.shift();
-
     if(playList.length === 0){
-        return;
+        connection.channel.leave();
     } else{
         PlaySong(connection, playList[0]);
     }
@@ -89,6 +88,7 @@ client.on('message', async message =>{
     //fun little audio file played reference from theminutehour skit
     if(message.content === "#tellemboys"){
         if(message.member.voice.channel){
+        playList.length = 0;
         let connection = await message.member.voice.channel.join();
             connection.play("tellEmBoys.mp3");
         }
@@ -97,6 +97,8 @@ client.on('message', async message =>{
     //another fun little audio file from the same skit
     if(message.content === "#fuckoffboys"){
         if(message.member.voice.channel){
+
+            playList.length = 0;
             let connection = await message.member.voice.channel.join();
             let dispatcher = connection.play("fuckOffBoys.mp3");
 
@@ -104,8 +106,13 @@ client.on('message', async message =>{
                  connection = message.member.voice.channel.leave();
              });
         }
-        
-        
+    }
+
+    if(message.content === "#skip"){
+        if(message.member.voice.channel){
+            let connection = await message.member.voice.channel.join();
+            PlayNextSong(connection);
+        }
     }
 });
 
